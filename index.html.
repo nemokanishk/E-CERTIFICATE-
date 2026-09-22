@@ -5,139 +5,159 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>E-Certificate Portal</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-    body { background-color: #f4f7f6; color: #333; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-    .container { background: #ffffff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); max-width: 500px; width: 100%; text-align: center; }
-    h2 { color: #1a365d; margin-bottom: 8px; }
-    p { font-size: 14px; color: #666; margin-bottom: 20px; }
-    input { width: 100%; padding: 12px 15px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; outline: none; }
-    input:focus { border-color: #3182ce; }
-    button { width: 100%; padding: 12px; background-color: #3182ce; color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
-    button:hover { background-color: #2b6cb0; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
+    body { background: #f0f2f5; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+    .box { background: #fff; padding: 25px; border-radius: 10px; max-width: 500px; width: 100%; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+    h2 { color: #1a365d; margin-bottom: 10px; }
+    p { color: #555; margin-bottom: 15px; font-size: 14px; }
+    input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; }
+    button { width: 100%; padding: 12px; background: #2563eb; color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; }
     #result { margin-top: 20px; display: none; }
-    .status { padding: 10px; border-radius: 6px; margin-bottom: 15px; font-weight: bold; }
-    .success { background-color: #c6f6d5; color: #22543d; }
-    .error { background-color: #fed7d7; color: #742a2a; }
-    canvas { max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 6px; margin-top: 10px; display: none; }
-    .download-btn { background-color: #38a169; margin-top: 15px; display: inline-block; text-decoration: none; color: white; padding: 12px; border-radius: 6px; font-weight: bold; width: 100%; text-align: center; }
+    .msg { padding: 10px; border-radius: 6px; margin-bottom: 10px; font-weight: bold; }
+    .success { background: #dcfce7; color: #166534; }
+    .error { background: #fee2e2; color: #991b1b; }
+    canvas { max-width: 100%; height: auto; border-radius: 6px; display: none; margin-top: 10px; }
+    .dl-btn { display: inline-block; width: 100%; padding: 12px; background: #16a34a; color: white; text-decoration: none; border-radius: 6px; font-weight: bold; margin-top: 15px; }
   </style>
 </head>
 <body>
-
-  <div class="container">
+  <div class="box">
     <h2>E-Certificate Portal</h2>
-    <p>Enter your registered Name, Email, or Phone to get your certificate.</p>
-    
-    <input type="text" id="userInput" placeholder="Enter Name, Email, or Phone...">
-    <button onclick="searchCertificate()">Search Certificate</button>
+    <p>Enter your Name, Roll Number, or Email to download your certificate.</p>
+    <input type="text" id="userInput" placeholder="Enter Name, Roll No, or Email...">
+    <button onclick="searchCert()">Search Certificate</button>
 
     <div id="result">
-      <div id="statusMsg" class="status"></div>
-      <canvas id="certCanvas" width="1000" height="700"></canvas>
-      <a id="downloadBtn" class="download-btn" style="display:none;" download="Certificate.png">Download Certificate</a>
+      <div id="status" class="msg"></div>
+      <canvas id="canvas"></canvas>
+      <a id="dl" class="dl-btn" style="display:none;" download="Certificate.png">Download Certificate</a>
     </div>
   </div>
 
   <script>
-    // ========================================================
-    // PASTE YOUR 90 ATTENDEES HERE IN THIS ARRAY:
-    // ========================================================
+    // ALL ROLL NUMBERS IN BT/XXXXX/26 AND BSCAI/XXXXX/26 FORMAT
     const dataset = [
-      { name: "Rahul Kumar", email: "rahul@gmail.com", phone: "9876543210" },
-      { name: "Ananya Sharma", email: "ananya@gmail.com", phone: "9876543211" },
-      { name: "Priya Singh", email: "priya@gmail.com", phone: "9876543212" }
+      { name: "Ritu Kumari", roll: "BSCAI/60034/26", email: "bscai60034.26@bitmesra.ac.in" },
+      { name: "Nikunj Kumari", roll: "BSCAI/60018/26", email: "bscai60018.26@bitmesra.ac.in" },
+      { name: "Puja Kumari", roll: "BT/60052/26", email: "btech60052.26@bitmesra.ac.in" },
+      { name: "Christy Dutta", roll: "BT/60085/26", email: "btech60085.26@bitmesra.ac.in" },
+      { name: "Samridhi Priya", roll: "BT/60027/26", email: "btech60027.26@bitmesra.ac.in" },
+      { name: "Palak Bibhuti", roll: "BT/60110/26", email: "palak.bibhuti@gmail.com" },
+      { name: "Anjali Bharti", roll: "BT/60029/26", email: "btech60029.26@bitmesra.ac.in" },
+      { name: "Ritika Sahu", roll: "BT/60042/26", email: "btech60042.26@bitmesra.ac.in" },
+      { name: "Sagar Gupta", roll: "BT/60035/26", email: "btech60035.26@bitmesra.ac.in" },
+      { name: "Prasenjeet Kumar", roll: "BT/60011/26", email: "btech60011.26@bitmesra.ac.in" },
+      { name: "Rehan Basu", roll: "BT/60032/26", email: "btech60032.26@bitmesra.ac.in" },
+      { name: "Ritisha Verma", roll: "BT/60091/26", email: "srivastava.santosh009@gmail.com" },
+      { name: "Akshat Shanker", roll: "BT/60054/26", email: "akshat.shanker.143@gmail.com" },
+      { name: "Pushkar Pratap Singh", roll: "BT/60061/26" },
+      { name: "Ujjwal Kumar", roll: "BT/60064/26" },
+      { roll: "BT/60041/26" },
+      { roll: "BT/60043/26" },
+      { roll: "BT/60048/26" },
+      { roll: "BT/60025/26" },
+      { roll: "BT/60105/26" },
+      { roll: "BT/60004/26" },
+      { roll: "BT/60053/26" },
+      { roll: "BT/60062/26" },
+      { roll: "BT/60044/26" },
+      { roll: "BT/60049/26" },
+      { roll: "BT/60005/26" },
+      { roll: "BT/60015/26" },
+      { roll: "BT/60096/26" },
+      { roll: "BT/60095/26" },
+      { roll: "BT/60087/26" },
+      { roll: "BT/60088/26" }
     ];
 
-    function searchCertificate() {
-      const input = document.getElementById('userInput').value.trim().toLowerCase();
-      const statusMsg = document.getElementById('statusMsg');
-      const resultDiv = document.getElementById('result');
-      const canvas = document.getElementById('certCanvas');
-      const downloadBtn = document.getElementById('downloadBtn');
+    function normalize(str) {
+      return (str || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    }
 
-      if (!input) {
-        alert("Please enter your name, email, or phone number.");
+    function searchCert() {
+      const rawInput = document.getElementById('userInput').value.trim();
+      const normInput = normalize(rawInput);
+      const status = document.getElementById('status');
+      const result = document.getElementById('result');
+      const canvas = document.getElementById('canvas');
+      const dl = document.getElementById('dl');
+
+      if (!rawInput) {
+        alert("Please enter Name, Roll No, or Email.");
         return;
       }
 
-      const match = dataset.find(user => 
-        (user.name && user.name.toLowerCase() === input) ||
-        (user.email && user.email.toLowerCase() === input) ||
-        (user.phone && user.phone.toString() === input)
-      );
+      // Flexible search allowing matching by full format, name, email, or just digits (e.g. 60034)
+      const match = dataset.find(user => {
+        const normName = normalize(user.name);
+        const normRoll = normalize(user.roll);
+        const normEmail = normalize(user.email);
 
-      resultDiv.style.display = "block";
+        return (normName && normName === normInput) ||
+               (normRoll && normRoll === normInput) ||
+               (normEmail && normEmail === normInput) ||
+               (normRoll && normRoll.includes(normInput) && normInput.length >= 4);
+      });
+
+      result.style.display = "block";
 
       if (match) {
-        statusMsg.className = "status success";
-        statusMsg.innerText = "Verified! Certificate ready for: " + match.name;
-        generateCertificate(match.name);
+        const displayName = match.name || match.roll;
+        status.className = "msg success";
+        status.innerText = "Verified! Certificate ready for: " + displayName;
+        drawCert(displayName);
       } else {
-        statusMsg.className = "status error";
-        statusMsg.innerText = "No record found! Check your spelling and try again.";
+        status.className = "msg error";
+        status.innerText = "No match found! Check your spelling or Roll No.";
         canvas.style.display = "none";
-        downloadBtn.style.display = "none";
+        dl.style.display = "none";
       }
     }
 
-    function generateCertificate(userName) {
-      const canvas = document.getElementById('certCanvas');
+    function drawCert(nameText) {
+      const canvas = document.getElementById('canvas');
       const ctx = canvas.getContext('2d');
-      const downloadBtn = document.getElementById('downloadBtn');
+      const dl = document.getElementById('dl');
 
-      // Draw Background
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      const img = new Image();
+      img.src = 'Take a look at my Canva design!.jpg';
 
-      // Draw Borders
-      ctx.strokeStyle = "#1a365d";
-      ctx.lineWidth = 15;
-      ctx.strokeRect(20, 20, canvas.width - 40, canvas.height - 40);
+      img.onload = function() {
+        canvas.width = img.width;
+        canvas.height = img.height;
 
-      ctx.strokeStyle = "#d69e2e";
-      ctx.lineWidth = 4;
-      ctx.strokeRect(35, 35, canvas.width - 70, canvas.height - 70);
+        ctx.drawImage(img, 0, 0);
 
-      // Title
-      ctx.fillStyle = "#1a365d";
-      ctx.font = "bold 42px Georgia";
-      ctx.textAlign = "center";
-      ctx.fillText("CERTIFICATE OF PARTICIPATION", canvas.width / 2, 140);
+        ctx.fillStyle = "#1a365d";
+        ctx.font = "bold " + Math.round(canvas.height * 0.045) + "px sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText(nameText, canvas.width / 2, canvas.height * 0.52);
 
-      ctx.fillStyle = "#718096";
-      ctx.font = "20px Georgia";
-      ctx.fillText("PROUDLY PRESENTED TO", canvas.width / 2, 220);
+        canvas.style.display = "block";
+        dl.href = canvas.toDataURL("image/png");
+        dl.style.display = "block";
+      };
 
-      // Candidate Name
-      ctx.fillStyle = "#2b6cb0";
-      ctx.font = "bold 48px 'Segoe UI', sans-serif";
-      ctx.fillText(userName, canvas.width / 2, 320);
+      img.onerror = function() {
+        canvas.width = 1000;
+        canvas.height = 700;
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, 1000, 700);
+        ctx.strokeStyle = "#1a365d";
+        ctx.lineWidth = 10;
+        ctx.strokeRect(20, 20, 960, 660);
 
-      // Underline Name
-      ctx.beginPath();
-      ctx.moveTo(250, 340);
-      ctx.lineTo(750, 340);
-      ctx.strokeStyle = "#cbd5e0";
-      ctx.lineWidth = 2;
-      ctx.stroke();
+        ctx.fillStyle = "#1a365d";
+        ctx.font = "bold 40px sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("CERTIFICATE OF PARTICIPATION", 500, 150);
+        ctx.fillText(nameText, 500, 350);
 
-      // Certificate Description
-      ctx.fillStyle = "#4a5568";
-      ctx.font = "22px Georgia";
-      ctx.fillText("For active participation and successful completion of the event.", canvas.width / 2, 420);
-
-      // Date
-      ctx.font = "italic 18px Georgia";
-      ctx.fillText("Date: " + new Date().toLocaleDateString(), canvas.width / 2, 530);
-
-      canvas.style.display = "block";
-
-      // Download Link
-      downloadBtn.href = canvas.toDataURL("image/png");
-      downloadBtn.download = userName.replace(/\s+/g, '_') + "_Certificate.png";
-      downloadBtn.style.display = "block";
+        canvas.style.display = "block";
+        dl.href = canvas.toDataURL("image/png");
+        dl.style.display = "block";
+      };
     }
   </script>
 </body>
 </html>
-
