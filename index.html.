@@ -1,1 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>E-Certificate Portal</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: #f4f7f6; color: #333; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+    .container { background: #ffffff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); max-width: 500px; width: 100%; text-align: center; }
+    h2 { color: #1a365d; margin-bottom: 8px; }
+    p { font-size: 14px; color: #666; margin-bottom: 20px; }
+    input { width: 100%; padding: 12px 15px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; outline: none; }
+    input:focus { border-color: #3182ce; }
+    button { width: 100%; padding: 12px; background-color: #3182ce; color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
+    button:hover { background-color: #2b6cb0; }
+    #result { margin-top: 20px; display: none; }
+    .status { padding: 10px; border-radius: 6px; margin-bottom: 15px; font-weight: bold; }
+    .success { background-color: #c6f6d5; color: #22543d; }
+    .error { background-color: #fed7d7; color: #742a2a; }
+    canvas { max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 6px; margin-top: 10px; display: none; }
+    .download-btn { background-color: #38a169; margin-top: 15px; display: inline-block; text-decoration: none; color: white; padding: 12px; border-radius: 6px; font-weight: bold; width: 100%; text-align: center; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h2>E-Certificate Portal</h2>
+    <p>Enter your registered Name, Email, or Phone to get your certificate.</p>
+    
+    <input type="text" id="userInput" placeholder="Enter Name, Email, or Phone...">
+    <button onclick="searchCertificate()">Search Certificate</button>
+
+    <div id="result">
+      <div id="statusMsg" class="status"></div>
+      <canvas id="certCanvas" width="1000" height="700"></canvas>
+      <a id="downloadBtn" class="download-btn" style="display:none;" download="Certificate.png">Download Certificate</a>
+    </div>
+  </div>
+
+  <script>
+    // ========================================================
+    // PASTE YOUR 90 ATTENDEES HERE IN THIS ARRAY:
+    // ========================================================
+    const dataset = [
+      { name: "Rahul Kumar", email: "rahul@gmail.com", phone: "9876543210" },
+      { name: "Ananya Sharma", email: "ananya@gmail.com", phone: "9876543211" },
+      { name: "Priya Singh", email: "priya@gmail.com", phone: "9876543212" }
+    ];
+
+    function searchCertificate() {
+      const input = document.getElementById('userInput').value.trim().toLowerCase();
+      const statusMsg = document.getElementById('statusMsg');
+      const resultDiv = document.getElementById('result');
+      const canvas = document.getElementById('certCanvas');
+      const downloadBtn = document.getElementById('downloadBtn');
+
+      if (!input) {
+        alert("Please enter your name, email, or phone number.");
+        return;
+      }
+
+      const match = dataset.find(user => 
+        (user.name && user.name.toLowerCase() === input) ||
+        (user.email && user.email.toLowerCase() === input) ||
+        (user.phone && user.phone.toString() === input)
+      );
+
+      resultDiv.style.display = "block";
+
+      if (match) {
+        statusMsg.className = "status success";
+        statusMsg.innerText = "Verified! Certificate ready for: " + match.name;
+        generateCertificate(match.name);
+      } else {
+        statusMsg.className = "status error";
+        statusMsg.innerText = "No record found! Check your spelling and try again.";
+        canvas.style.display = "none";
+        downloadBtn.style.display = "none";
+      }
+    }
+
+    function generateCertificate(userName) {
+      const canvas = document.getElementById('certCanvas');
+      const ctx = canvas.getContext('2d');
+      const downloadBtn = document.getElementById('downloadBtn');
+
+      // Draw Background
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Draw Borders
+      ctx.strokeStyle = "#1a365d";
+      ctx.lineWidth = 15;
+      ctx.strokeRect(20, 20, canvas.width - 40, canvas.height - 40);
+
+      ctx.strokeStyle = "#d69e2e";
+      ctx.lineWidth = 4;
+      ctx.strokeRect(35, 35, canvas.width - 70, canvas.height - 70);
+
+      // Title
+      ctx.fillStyle = "#1a365d";
+      ctx.font = "bold 42px Georgia";
+      ctx.textAlign = "center";
+      ctx.fillText("CERTIFICATE OF PARTICIPATION", canvas.width / 2, 140);
+
+      ctx.fillStyle = "#718096";
+      ctx.font = "20px Georgia";
+      ctx.fillText("PROUDLY PRESENTED TO", canvas.width / 2, 220);
+
+      // Candidate Name
+      ctx.fillStyle = "#2b6cb0";
+      ctx.font = "bold 48px 'Segoe UI', sans-serif";
+      ctx.fillText(userName, canvas.width / 2, 320);
+
+      // Underline Name
+      ctx.beginPath();
+      ctx.moveTo(250, 340);
+      ctx.lineTo(750, 340);
+      ctx.strokeStyle = "#cbd5e0";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Certificate Description
+      ctx.fillStyle = "#4a5568";
+      ctx.font = "22px Georgia";
+      ctx.fillText("For active participation and successful completion of the event.", canvas.width / 2, 420);
+
+      // Date
+      ctx.font = "italic 18px Georgia";
+      ctx.fillText("Date: " + new Date().toLocaleDateString(), canvas.width / 2, 530);
+
+      canvas.style.display = "block";
+
+      // Download Link
+      downloadBtn.href = canvas.toDataURL("image/png");
+      downloadBtn.download = userName.replace(/\s+/g, '_') + "_Certificate.png";
+      downloadBtn.style.display = "block";
+    }
+  </script>
+</body>
+</html>
 
